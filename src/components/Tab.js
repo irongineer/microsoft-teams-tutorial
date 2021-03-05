@@ -26,20 +26,42 @@ class Tab extends React.Component {
         context: context,
       });
     });
+    microsoftTeams.registerOnThemeChangeHandler((theme) => {
+      if (theme !== this.state.context.theme) {
+        console.log('Not match!');
+        this.setState({ theme });
+      }
+    });
     // Next steps: Error handling using the error object
   }
 
   render() {
+    const isTheme = this.state.theme === 'default';
+    console.log('theme: ', this.state.context);
+    console.log('isTheme: ', isTheme);
+
     let userName =
       Object.keys(this.state.context).length > 0
         ? this.state.context['upn']
         : '';
+    console.log('username: ', userName);
 
     return (
-      <div>
-        <h3>Hello World!</h3>
-        <h1>Congratulations {userName}!</h1>{' '}
-        <h3>This is the tab you made :-)</h3>
+      <div className={isTheme ? 'Lite' : 'Dark'}>
+        <h1>Important Contacts</h1>
+        <ul>
+          <li>
+            Help Desk:{' '}
+            <a href="mailto:support@company.com">support@company.com</a>
+          </li>
+          <li>
+            Human Resources: <a href="mailto:hr@company.com">hr@company.com</a>
+          </li>
+          <li>
+            Facilities:{' '}
+            <a href="mailto:facilities@company.com">facilities@company.com</a>
+          </li>
+        </ul>
       </div>
     );
   }

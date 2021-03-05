@@ -7,6 +7,9 @@ h1 {
 h2 {
   font-size: .8em;
 }
+a {
+  color: inherit;
+}
 .PropName {
   font-weight: bold;
   color: #6264A7;
@@ -18,3 +21,12 @@ h2 {
 .Error {
   color: red;
 }
+
+.Lite {
+  background-color: #EEF1F5;
+  color: #16233A
+}
+.Dark {
+  background-color: #2B2B30;
+  color: #FFFFFF;
+};
