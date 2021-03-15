@@ -1,64 +1,55 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.8/MicrosoftTeams.schema.json",
   "manifestVersion": "1.8",
-  "id": "{{APPLICATION_ID}}",
-  "version": "{{VERSION}}",
-  "packageName": "{{PACKAGE_NAME}}",
+  "version": "1.0.0",
+  "id": "b3ec9d9f-64ee-41c7-8e57-b2489ebc3a2d",
+  "packageName": "com.irongineer.teams.devapp",
   "developer": {
-    "name": "Contoso",
-    "websiteUrl": "https://{{HOSTNAME}}",
-    "privacyUrl": "https://{{HOSTNAME}}/privacy.html",
-    "termsOfUseUrl": "https://{{HOSTNAME}}/tou.html"
-  },
-  "name": {
-    "short": "Conversational Bot",
-    "full": "Conversational Bot"
-  },
-  "description": {
-    "short": "TODO: add short description here",
-    "full": "TODO: add full description here"
+      "name": "Contoso",
+      "websiteUrl": "https://www.example.com",
+      "privacyUrl": "https://www.example.com",
+      "termsOfUseUrl": "https://www.example.com"
   },
   "icons": {
-    "outline": "icon-outline.png",
-    "color": "icon-color.png"
+      "color": "color.png",
+      "outline": "outline.png"
   },
-  "accentColor": "#D85028",
-  "configurableTabs": [],
-  "staticTabs": [],
+  "name": {
+      "short": "Conversational Bot",
+      "full": ""
+  },
+  "description": {
+      "short": "Conversational Bot",
+      "full": "Conversational Bot for you"
+  },
+  "accentColor": "#FFFFFF",
   "bots": [
-    {
-      "botId": "{{MICROSOFT_APP_ID}}",
-      "needsChannelSelector": true,
-      "isNotificationOnly": false,
-      "scopes": [
-        "team",
-        "personal",
-        "groupchat"
-      ],
-      "commandLists": [
-        {
+      {
+          "botId": "a97ceafb-52d9-442a-865a-2df428e6bfa1",
           "scopes": [
-            "team",
-            "personal"
+              "personal",
+              "team"
           ],
-          "commands": [
-            {
-              "title": "Help",
-              "description": "Shows help information"
-            }
-          ]
-        }
-      ]
-    }
+          "commandLists": [
+              {
+                  "scopes": [
+                      "personal"
+                  ],
+                  "commands": [
+                      {
+                          "title": "MentionMe",
+                          "description": "送信社の＠メンションでメッセージを送信する"
+                      }
+                  ]
+              }
+          ],
+          "supportsFiles": false,
+          "isNotificationOnly": false
+      }
   ],
-  "connectors": [],
-  "composeExtensions": [],
   "permissions": [
-    "identity",
-    "messageTeamMembers"
+      "identity",
+      "messageTeamMembers"
   ],
-  "validDomains": [
-    "{{HOSTNAME}}"
-  ],
-  "showLoadingIndicator": false
+  "validDomains": []
 }
