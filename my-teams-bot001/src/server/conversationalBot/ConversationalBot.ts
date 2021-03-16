@@ -41,11 +41,25 @@ export class ConversationalBot extends TeamsActivityHandler {
             // TODO: add your own bot logic in here
             switch (context.activity.type) {
                 case ActivityTypes.Message:
-                    {
+                    // if a value property exists = adaptive card submit action
+                    if (context.activity.value) {
+                        switch (context.activity.value.cardAction) {
+                            case "update":
+                                await this.updateCardActivity(context);
+                                break;
+                            case "delete":
+                                await this.deleteCardActivity(context);
+                                break;
+                        }
+                    } else {
                         let text = TurnContext.removeRecipientMention(context.activity);
                         text = text.toLowerCase();
                         if (text.startsWith("mentionme")) {
-                            await this.handleMessageMentionMeOneOnOne(context);
+                            if (context.activity.conversation.conversationType === "personal") {
+                                await this.handleMessageMentionMeOneOnOne(context);
+                            } else {
+                                await this.handleMessageMentionMeChannelConversation(context);
+                            }
                             return;
                         } else if (text.startsWith("hello")) {
                             await context.sendActivity("Oh, hello to you as well!");
@@ -54,7 +68,44 @@ export class ConversationalBot extends TeamsActivityHandler {
                             const dc = await this.dialogs.createContext(context);
                             await dc.beginDialog("help");
                         } else {
-                            await context.sendActivity("I'm terribly sorry, but my developer hasn't trained me to do anything yet...");
+                            const value = { cardAction: "update", count: 0 };
+                            const card = CardFactory.adaptiveCard({
+                                $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+                                type: "AdaptiveCard",
+                                version: "1.0",
+                                body: [
+                                    {
+                                        type: "Container",
+                                        items: [
+                                            {
+                                                type: "TextBlock",
+                                                text: "Adaptive card response",
+                                                weight: "bolder",
+                                                size: "large"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "Container",
+                                        items: [
+                                            {
+                                                type: "TextBlock",
+                                                text: "Demonstrates how to respond with a card, update the card & ultimately delete the response.",
+                                                wrap: true
+                                            }
+                                        ]
+                                    }
+                                ],
+                                actions: [
+                                    {
+                                        type: "Action.Submit",
+                                        title: "Update card",
+                                        data: value
+                                    }
+                                ]
+                            });
+                            await context.sendActivity({ attachments: [card] });
+                            return;
                         }
                     }
                     break;
@@ -78,12 +129,16 @@ export class ConversationalBot extends TeamsActivityHandler {
 
         this.onMessageReaction(async (context: TurnContext): Promise<void> => {
             const added = context.activity.reactionsAdded;
-            if (added && added[0]) {
-                await context.sendActivity({
-                    textFormat: "xml",
-                    text: `That was an interesting reaction (<b>${added[0].type}</b>)`
-                });
-            }
+            added?.forEach(async (reaction) => {
+                if (reaction.type === "like") {
+                    await context.sendActivity("Thank you!");
+                } else {
+                    await context.sendActivity({
+                        textFormat: "xml",
+                        text: `That was an interesting reaction (<b>${added[0].type}</b>)`
+                    });
+                }
+            });
         });
     }
 
@@ -98,4 +153,71 @@ export class ConversationalBot extends TeamsActivityHandler {
         replyActivity.entities = [mention];
         await context.sendActivity(replyActivity);
     }
+
+    private async handleMessageMentionMeChannelConversation(context: TurnContext): Promise<void> {
+        const mention = {
+            mentioned: context.activity.from,
+            text: `<at>${new TextEncorder().encode(context.activity.from.name)}</at>`,
+            type: "mention"
+        };
+
+        const replyActivity = MessageFactory.text(`Hi ${mention.text}`);
+        replyActivity.entities = [mention];
+        const followupActivity = MessageFactory.text("*We are in a channel conversation*");
+        await context.sendActivities([replyActivity, followupActivity]);
+    }
+
+    private async updateCardActivity(context): Promise<void> {
+        const value = {
+            cardAction: "update",
+            count: context.activity.value.count + 1
+        };
+        const card = CardFactory.adaptiveCard({
+            $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+            type: "AdaptiveCard",
+            version: "1.0",
+            body: [
+                {
+                    type: "Container",
+                    items: [
+                        {
+                            type: "TextBlock",
+                            text: "Adaptive card response",
+                            weight: "bolder",
+                            size: "large"
+                        }
+                    ]
+                },
+                {
+                    type: "Container",
+                    items: [
+                        {
+                            type: "TextBlock",
+                            text: `Updated count: ${value.count}`,
+                            wrap: true
+                        }
+                    ]
+                }
+            ],
+            actions: [
+                {
+                    type: "Action.Submit",
+                    title: "Update card",
+                    data: value
+                },
+                {
+                    type: "Action.Submit",
+                    title: "Delete card",
+                    data: { cardAction: "delete" }
+                }
+            ]
+        });
+
+        await context.updateActivity({ attachments: [card], id: context.activity.replyToId, type: "message" });
+    }
+
+    private async deleteCardActivity(context): Promise<void> {
+        await context.deleteActivity(context.activity.replyToId);
+    }
+
 }
