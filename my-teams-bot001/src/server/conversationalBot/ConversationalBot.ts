@@ -1,7 +1,7 @@
 import { BotDeclaration } from "express-msteams-host";
 import * as debug from "debug";
 import { DialogSet, DialogState } from "botbuilder-dialogs";
-import { StatePropertyAccessor, CardFactory, TurnContext, MemoryStorage, ConversationState, ActivityTypes, TeamsActivityHandler, MessageFactory } from "botbuilder";
+import { StatePropertyAccessor, CardFactory, TurnContext, MemoryStorage, ConversationState, ActivityTypes, TeamsActivityHandler, MessageFactory, ChannelInfo, TeamsChannelData, ConversationParameters, teamsGetChannelId, Activity, BotFrameworkAdapter, ConversationReference, ConversationResourceResponse } from "botbuilder";
 import HelpDialog from "./dialogs/HelpDialog";
 import WelcomeCard from "./dialogs/WelcomeDialog";
 import * as Util from "util";
@@ -50,6 +50,12 @@ export class ConversationalBot extends TeamsActivityHandler {
                             case "delete":
                                 await this.deleteCardActivity(context);
                                 break;
+                            case "newconversation":
+                            {
+                                const message = MessageFactory.text("This will be the first message in a new thread");
+                                await this.createConversation(context, message);
+                                break;
+                            }
                         }
                     } else {
                         let text = TurnContext.removeRecipientMention(context.activity);
@@ -101,6 +107,11 @@ export class ConversationalBot extends TeamsActivityHandler {
                                         type: "Action.Submit",
                                         title: "Update card",
                                         data: value
+                                    },
+                                    {
+                                        type: "Action.Submit",
+                                        title: "Create new thread in this channel",
+                                        data: { cardAction: "newconversation" }
                                     }
                                 ]
                             });
@@ -220,4 +231,11 @@ export class ConversationalBot extends TeamsActivityHandler {
         await context.deleteActivity(context.activity.replyToId);
     }
 
+    private async createConversation(context: TurnContext, message: Partial<Activity>): Promise<void> {
+        const adapter = <BotFrameworkAdapter>context.adapter;
+        const conversationReference = <ConversationReference>TurnContext.getConversationReference(context.activity);
+        await adapter.continueConversation(conversationReference, async turnContext => {
+            await turnContext.sendActivity(message);
+        });
+    }
 }
